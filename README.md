@@ -2,7 +2,7 @@
 
 台灣 OSM + SpatiaLite 的 PHP 路線規劃範例。支援汽車、機車、步行、途徑點與可選的地址／POI 查詢。
 
-資料庫與部署設定都不納入版本控制；Easymap 7117 預設從 3wa CDN 載入，因此可安全公開這個 MIT 專案。
+資料庫與部署設定都不納入版本控制；Easymap 7117 預設從 FocusIT CDN 載入，因此可安全公開這個 MIT 專案。
 
 ## 快速開始
 
@@ -31,7 +31,7 @@ php -S 127.0.0.1:8000
 
 ```php
 return [
-    'easymap_script' => 'https://3wa.tw/inc/javascript/easymap7117/easymap.js',
+    'easymap_script' => 'https://tile.focusit.tw/Easymap7117/easymap.js',
     'spatialite_extension' => '/path/to/mod_spatialite.so',
     'address_api_url' => 'https://your-service.example/api.php',
 ];

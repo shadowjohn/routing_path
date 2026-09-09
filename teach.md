@@ -13,7 +13,7 @@ Taiwan OSM PBF
             └─ route_walk
 
 index.php ── api.php ── SpatiaLite
-     └──── Easymap 7117 CDN
+     └──── FocusIT Easymap 7117 CDN
 ```
 
 `routing_config.php` 提供可攜的預設值；`config.local.php` 可覆寫資料庫、SpatiaLite extension、Easymap 與地理編碼服務位置，且永不提交。
@@ -72,13 +72,13 @@ cp config.local.php.example config.local.php
 <?php
 
 return [
-    'easymap_script' => 'https://3wa.tw/inc/javascript/easymap7117/easymap.js',
+    'easymap_script' => 'https://tile.focusit.tw/Easymap7117/easymap.js',
     'spatialite_extension' => '/path/to/mod_spatialite.so',
     'address_api_url' => '', // 留空時僅支援 lon,lat 輸入
 ];
 ```
 
-預設會從 3wa 的 Easymap 7117 CDN 載入 SDK。若需使用自己的版本，可在 `config.local.php` 覆寫 `easymap_script`。
+預設會從 FocusIT 的 Easymap 7117 CDN 載入 SDK。若需使用自己的版本，可在 `config.local.php` 覆寫 `easymap_script`。
 
 SQLite VirtualNetwork 查詢會建立暫存檔，因此路由 DB 與所在目錄必須可由 PHP 執行帳號寫入。請以 web service 帳號的擁有者／群組權限設定資料目錄，避免開放所有人寫入。
 

@@ -11,7 +11,7 @@
 - `api.php` 改用 PDO prepared statement；不再依賴專案外的資料庫 helper。
 - `index.php` 與 `api_tester.php` 改為專案內的 HTML head/body 與 jQuery AJAX helper；移除頂部框架 navbar 的版面補償。
 - `build_routing_v2.py` 改用 `--pbf`、`--extension` 參數與環境變數預設，建庫不再綁定特定主機路徑。
-- Easymap 預設改由 3wa 的 7117 CDN 載入；仍可在本機設定覆寫。
+- Easymap 預設改由 FocusIT 的 7117 CDN 載入；仍可在本機設定覆寫。
 - 實測通過 PHP lint、前端 geocode 測試與 SpatiaLite 路由 smoke test。
 
 ## 2026-05-09 — 最近節點與互動介面
