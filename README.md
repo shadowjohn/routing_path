@@ -1,21 +1,56 @@
 # routing_path
 
-台灣 OSM + SpatiaLite 的 PHP 路線規劃範例，支援汽車、機車、步行與途徑點。
+台灣 OSM + SpatiaLite 的 PHP 路線規劃範例。支援汽車、機車、步行、途徑點與可選的地址／POI 查詢。
 
-## Setup
+資料庫、Easymap SDK 與部署設定都不納入版本控制，因此可安全公開這個 MIT 專案。
 
-1. Install PHP SQLite, SpatiaLite, Python 3, and `pyosmium`.
-2. Download a Taiwan OSM PBF, then build the routing DB:
+## 快速開始
 
-   ```bash
-   python3 build_routing_v2.py --pbf taiwan-latest.osm.pbf --extension /path/to/mod_spatialite.so
-   ```
+需求：PHP 的 `pdo_sqlite`、SpatiaLite、Python 3、`pyosmium`，以及 `spatialite_network` 指令。
 
-3. Copy `config.local.php.example` to `config.local.php` and set the local SpatiaLite path. Configure the geocoding URL only if address and POI lookup are needed.
-4. Put a separately licensed Easymap distribution in `assets/easymap/`, or set `easymap_script` to its served URL. Easymap is not included in this repository.
+```bash
+pip3 install osmium
+wget https://download.geofabrik.de/asia/taiwan-latest.osm.pbf
+python3 build_routing_v2.py \
+  --pbf taiwan-latest.osm.pbf \
+  --extension /path/to/mod_spatialite.so
+```
 
-The generated SQLite database and local configuration are intentionally ignored by Git.
+接著建立本機設定、放入持有授權的 Easymap SDK，並啟動 PHP：
+
+```bash
+cp config.local.php.example config.local.php
+mkdir -p assets/easymap
+# 將 Easymap 發行版放到 assets/easymap/，使 easymap.js 位於該目錄
+php -S 127.0.0.1:8000
+```
+
+開啟 `http://127.0.0.1:8000/index.php`；API 測試頁為 `api_tester.php`。
+
+## 本機設定
+
+`config.local.php` 不會被 Git 追蹤。通常只要指定本機 SpatiaLite 路徑；地址與 POI 服務是選用功能。
+
+```php
+return [
+    'easymap_script' => 'assets/easymap/easymap.js',
+    'spatialite_extension' => '/path/to/mod_spatialite.so',
+    'address_api_url' => 'https://your-service.example/api.php',
+];
+```
+
+路由資料庫預設為專案根目錄的 `taiwan_routing_v2.sqlite`，也可用 `database_path` 覆寫。SQLite VirtualNetwork 查詢會建立暫存檔，資料庫檔案與所在目錄必須由 PHP 執行帳號寫入；請以擁有者與群組權限設定，不要使用 `chmod 777`。
+
+## 驗證
+
+```bash
+php -l api.php
+node tests/geocode_ui.test.js
+curl 'http://127.0.0.1:8000/api.php?mode=routing_path&start_point=120.665689,24.119797&end_point=120.649321,24.180852&travel_mode=moto'
+```
+
+完整架構、建庫與 API 說明見 [teach.md](teach.md)；變更記錄見 [history.md](history.md)。
 
 ## License
 
-MIT. The Easymap SDK and OSM data have their own licenses and terms.
+本專案採 MIT License。Easymap SDK 與 OSM 資料分別適用其原有授權與使用條款，並未包含在本 repository 中。

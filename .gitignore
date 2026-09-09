@@ -3,6 +3,7 @@ config.local.php
 /assets/easymap/
 
 # Generated routing data and SQLite runtime files.
+*.osm.pbf
 *.sqlite
 *.sqlite-shm
 *.sqlite-wal
@@ -19,8 +20,6 @@ __pycache__/
 node_modules/
 vendor/
 *.log
-history.md
-teach.md
 resume_codex.sh
 api_tester.html
 test.php
