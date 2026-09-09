@@ -2,7 +2,7 @@
 
 台灣 OSM + SpatiaLite 的 PHP 路線規劃範例。支援汽車、機車、步行、途徑點與可選的地址／POI 查詢。
 
-資料庫、Easymap SDK 與部署設定都不納入版本控制，因此可安全公開這個 MIT 專案。
+資料庫與部署設定都不納入版本控制；Easymap 7117 預設從 3wa CDN 載入，因此可安全公開這個 MIT 專案。
 
 ## 快速開始
 
@@ -16,12 +16,10 @@ python3 build_routing_v2.py \
   --extension /path/to/mod_spatialite.so
 ```
 
-接著建立本機設定、放入持有授權的 Easymap SDK，並啟動 PHP：
+接著建立本機設定並啟動 PHP：
 
 ```bash
 cp config.local.php.example config.local.php
-mkdir -p assets/easymap
-# 將 Easymap 發行版放到 assets/easymap/，使 easymap.js 位於該目錄
 php -S 127.0.0.1:8000
 ```
 
@@ -33,7 +31,7 @@ php -S 127.0.0.1:8000
 
 ```php
 return [
-    'easymap_script' => 'assets/easymap/easymap.js',
+    'easymap_script' => 'https://3wa.tw/inc/javascript/easymap7117/easymap.js',
     'spatialite_extension' => '/path/to/mod_spatialite.so',
     'address_api_url' => 'https://your-service.example/api.php',
 ];
@@ -53,4 +51,4 @@ curl 'http://127.0.0.1:8000/api.php?mode=routing_path&start_point=120.665689,24.
 
 ## License
 
-本專案採 MIT License。Easymap SDK 與 OSM 資料分別適用其原有授權與使用條款，並未包含在本 repository 中。
+本專案採 MIT License。Easymap SDK 由 CDN 提供，OSM 資料分別適用其原有授權與使用條款。

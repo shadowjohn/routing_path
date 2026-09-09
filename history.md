@@ -5,12 +5,13 @@
 ## 2026-09-09 — 公開 MIT 初版
 
 - 建立 GitHub `main` 首版提交，延續 MIT License。
-- 加入 `.gitignore`：忽略路由 SQLite、SQLite 暫存檔、`config.local.php`、Easymap SDK 與本機工具檔案。
+- 加入 `.gitignore`：忽略路由 SQLite、SQLite 暫存檔、`config.local.php` 與本機工具檔案。
 - 加入 `routing_config.php` 與 `config.local.php.example`：資料庫、SpatiaLite、Easymap 與地址服務都能用本機設定覆寫。
 - 移除舊框架的全域 config、header、AJAX helper 與固定檔案系統路徑。
 - `api.php` 改用 PDO prepared statement；不再依賴專案外的資料庫 helper。
 - `index.php` 與 `api_tester.php` 改為專案內的 HTML head/body 與 jQuery AJAX helper；移除頂部框架 navbar 的版面補償。
 - `build_routing_v2.py` 改用 `--pbf`、`--extension` 參數與環境變數預設，建庫不再綁定特定主機路徑。
+- Easymap 預設改由 3wa 的 7117 CDN 載入；仍可在本機設定覆寫。
 - 實測通過 PHP lint、前端 geocode 測試與 SpatiaLite 路由 smoke test。
 
 ## 2026-05-09 — 最近節點與互動介面

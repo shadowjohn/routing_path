@@ -1,6 +1,5 @@
-# Local runtime configuration and third-party map SDK.
+# Local runtime configuration.
 config.local.php
-/assets/easymap/
 
 # Generated routing data and SQLite runtime files.
 *.osm.pbf

@@ -13,7 +13,7 @@ Taiwan OSM PBF
             └─ route_walk
 
 index.php ── api.php ── SpatiaLite
-     └──── Easymap SDK（自行提供）
+     └──── Easymap 7117 CDN
 ```
 
 `routing_config.php` 提供可攜的預設值；`config.local.php` 可覆寫資料庫、SpatiaLite extension、Easymap 與地理編碼服務位置，且永不提交。
@@ -72,13 +72,13 @@ cp config.local.php.example config.local.php
 <?php
 
 return [
-    'easymap_script' => 'assets/easymap/easymap.js',
+    'easymap_script' => 'https://3wa.tw/inc/javascript/easymap7117/easymap.js',
     'spatialite_extension' => '/path/to/mod_spatialite.so',
     'address_api_url' => '', // 留空時僅支援 lon,lat 輸入
 ];
 ```
 
-將持有授權的 Easymap 發行版放到 `assets/easymap/`，使 `easymap.js` 位於該目錄，或把 `easymap_script` 改為自己的服務 URL。Easymap 不包含於本專案。
+預設會從 3wa 的 Easymap 7117 CDN 載入 SDK。若需使用自己的版本，可在 `config.local.php` 覆寫 `easymap_script`。
 
 SQLite VirtualNetwork 查詢會建立暫存檔，因此路由 DB 與所在目錄必須可由 PHP 執行帳號寫入。請以 web service 帳號的擁有者／群組權限設定資料目錄，避免開放所有人寫入。
 
@@ -142,5 +142,5 @@ node tests/geocode_ui.test.js
 | 找不到資料庫 | 檢查 `database_path` 與 DB 是否已由建庫腳本產生。 |
 | 無法載入 SpatiaLite | 在 `config.local.php` 設定正確的 `spatialite_extension`，並確認 PHP SQLite 可載入 extension。 |
 | `readonly database` | 讓 PHP 執行帳號能寫入 DB 和其目錄；不要以 `chmod 777` 解決。 |
-| 地圖空白 | 確認 Easymap SDK 已放在 `assets/easymap/`，或 `easymap_script` 指向正確 URL。 |
+| 地圖空白 | 確認可連線至 Easymap CDN，或在 `config.local.php` 設定自己的 `easymap_script` URL。 |
 | 地址查詢不可用 | 設定可回傳相容 JSON 的 `address_api_url`，或直接使用 `lon,lat`。 |
