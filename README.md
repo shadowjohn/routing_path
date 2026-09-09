@@ -43,6 +43,7 @@ return [
 
 ```bash
 php -l api.php
+php test.php
 node tests/geocode_ui.test.js
 curl 'http://127.0.0.1:8000/api.php?mode=routing_path&start_point=120.665689,24.119797&end_point=120.649321,24.180852&travel_mode=moto'
 ```

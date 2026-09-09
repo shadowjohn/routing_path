@@ -21,4 +21,3 @@ vendor/
 *.log
 resume_codex.sh
 api_tester.html
-test.php
