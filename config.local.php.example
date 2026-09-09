@@ -1,0 +1,9 @@
+<?php
+
+return [
+    // Do not commit this file: it may contain private service URLs or paths.
+    'easymap_script' => 'assets/easymap/easymap.js',
+    'address_api_url' => 'https://example.invalid/geocode/api.php',
+    'database_path' => __DIR__ . '/taiwan_routing_v2.sqlite',
+    'spatialite_extension' => '/path/to/mod_spatialite.so',
+];

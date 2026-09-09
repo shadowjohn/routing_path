@@ -1,0 +1,35 @@
+{
+  "routing_path":
+  {
+    "description": "路線規劃 API，支援汽車／機車／步行三模式，可選擇避開高速公路或收費路段。回傳完整路線 WKT geometry、預估時間、距離、吸附點與路段摘要。",
+    "result_sample": "{\n  \"status\": \"OK\",\n  \"travel_mode\": \"car\",\n  \"avoid\": false,\n  \"route_table\": \"route_car\",\n  \"total_cost_sec\": 626,\n  \"total_cost_min\": 10.4,\n  \"total_length_m\": 8299.9,\n  \"total_length_km\": 8.3,\n  \"summary\": {\n    \"travel_mode\": \"car\",\n    \"avoid\": false,\n    \"route_table\": \"route_car\",\n    \"total_cost_sec\": 626,\n    \"total_cost_min\": 10.4,\n    \"total_length_m\": 8299.9,\n    \"total_length_km\": 8.3\n  },\n  \"snap_points\": {\n    \"start\": { \"seq_id\": 782312, \"distance_m\": 42.9 },\n    \"via\": [],\n    \"end\": { \"seq_id\": 351540, \"distance_m\": 20.6 }\n  },\n  \"route_parts\": [\n    {\n      \"road_num\": 0,\n      \"cost_sec\": 625.8,\n      \"wkt\": \"LINESTRING(120.650252 24.177706,120.665801 24.120011)\"\n    }\n  ],\n  \"segments\": [\n    { \"name\": \"逢大路\", \"cost_min\": 0.4 },\n    { \"name\": \"忠明南路\", \"cost_min\": 5.3 }\n  ],\n  \"nodes\": [782312, 351540],\n  \"data\": { \"0\": [] }\n}",
+    "GET": {
+      "start_point": {
+        "sample": "120.649834,24.177558",
+        "description": "起點座標，格式：lon,lat（WGS84）"
+      },
+      "end_point": {
+        "sample": "120.665589,24.119477",
+        "description": "終點座標，格式：lon,lat（WGS84）"
+      },
+      "travel_mode": {
+        "sample": "car",
+        "description": "交通模式：car（汽車）/ moto（機車）/ walk（步行），預設 car"
+      },
+      "avoid_highway": {
+        "sample": "0",
+        "description": "避開高速／快速道路：1=避開，0=不避（預設）"
+      },
+      "avoid_toll": {
+        "sample": "0",
+        "description": "避開收費路段：1=避開，0=不避（預設）"
+      },
+      "passpath": {
+        "sample": "",
+        "description": "途徑點（換行分隔，每行 lon,lat），選填"
+      }
+    },
+    "POST": null,
+    "FILE": null
+  }
+}

@@ -1,0 +1,26 @@
+# Local runtime configuration and third-party map SDK.
+config.local.php
+/assets/easymap/
+
+# Generated routing data and SQLite runtime files.
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+*.db
+*.db-shm
+*.db-wal
+
+# Local tooling and notes.
+.agents/
+.claude/
+.codex/
+.playwright-cli/
+__pycache__/
+node_modules/
+vendor/
+*.log
+history.md
+teach.md
+resume_codex.sh
+api_tester.html
+test.php
