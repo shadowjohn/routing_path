@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """
 OSM PBF → taiwan_routing_v2.sqlite
-建立支援汽車/機車/步行的 VirtualRouting 路由資料庫
+建立支援汽車/機車/步行的 VirtualNetwork 路由資料庫
 
 用法：
   python3 build_routing_v2.py             # 全流程
-  python3 build_routing_v2.py --roads     # 只建 roads 表（跳過 VirtualRouting，快速驗證）
-  python3 build_routing_v2.py --routing   # 只建 VirtualRouting（roads 表已存在）
+  python3 build_routing_v2.py --roads     # 只建 roads 表（跳過 VirtualNetwork，快速驗證）
+  python3 build_routing_v2.py --routing   # 只建 VirtualNetwork（roads 表已存在）
+  python3 build_routing_v2.py --demo-routing # 只建展示用雙向圖（既有 DB）
 
 預設在程式所在目錄產出 taiwan_routing_v2.sqlite。
 """
@@ -52,6 +53,21 @@ SPEED_TABLE = {
 EXPRESSWAY_HW = {'motorway', 'trunk', 'motorway_link', 'trunk_link'}
 
 BATCH_SIZE = 10_000
+
+ROUTE_MODES = [
+    # (cost_col, data_tbl, vt_tbl, respect_oneway)
+    ('cost_car',       'route_car_data',       'route_car',       True),
+    ('cost_car_avoid', 'route_car_avoid_data', 'route_car_avoid', True),
+    ('cost_moto',      'route_moto_data',      'route_moto',      True),
+    ('cost_walk',      'route_walk_data',      'route_walk',      False),
+]
+
+DEMO_ROUTE_MODES = [
+    # 展示圖忽略道路方向；步行圖原本已是雙向，無須重複建立。
+    ('cost_car',       'route_car_demo_data',       'route_car_demo',       False),
+    ('cost_car_avoid', 'route_car_avoid_demo_data', 'route_car_avoid_demo', False),
+    ('cost_moto',      'route_moto_demo_data',      'route_moto_demo',      False),
+]
 
 # ─── 工具函數 ─────────────────────────────────────────────
 
@@ -267,6 +283,39 @@ def create_indexes(conn):
     conn.execute("SELECT CreateSpatialIndex('roads','geometry')")
     conn.commit()
 
+def build_network_tables(db_path, modes):
+    import subprocess
+
+    base_args = [
+        'spatialite_network',
+        '-d', db_path,
+        '-T', 'roads',
+        '-f', 'seq_from',
+        '-t', 'seq_to',
+        '-g', 'geometry',
+        '-n', 'name',
+        '--a-star-supported',
+        '--overwrite-output',
+    ]
+    for cost_col, data_tbl, vt_tbl, respect_oneway in modes:
+        t = time.time()
+        print(f"  spatialite_network → {vt_tbl} ...", flush=True)
+        args = base_args + ['-c', cost_col, '-o', data_tbl, '-vt', vt_tbl]
+        if respect_oneway:
+            args += ['--oneway-fromto', 'valid_ft', '--oneway-tofrom', 'valid_tf']
+        else:
+            args += ['--bidirectional']
+        result = subprocess.run(args, capture_output=True, text=True)
+        ok = 'NETWORK-DATA table' in result.stdout and 'successfully created' in result.stdout
+        print(f"    {'OK' if ok else 'FAILED'}，耗時 {time.time()-t:.1f}s")
+        if not ok:
+            print(result.stdout[-500:])
+            print(result.stderr[-500:])
+
+def build_demo_routing(db_path):
+    print("\n[建立展示用雙向 VirtualNetwork]")
+    build_network_tables(db_path, DEMO_ROUTE_MODES)
+
 def build_node_seq_and_routing(conn, db_path):
     """
     1. 刪閉合環路（spatialite_network 不接受 node_from=node_to）
@@ -276,8 +325,6 @@ def build_node_seq_and_routing(conn, db_path):
     5. 呼叫 spatialite_network CLI 建立各模式 VirtualNetwork
     """
     conn.close()   # spatialite_network 需要獨佔存取
-
-    import subprocess
 
     # 步驟 1~4 用 python 操作
     conn2 = open_db(db_path)
@@ -322,39 +369,8 @@ def build_node_seq_and_routing(conn, db_path):
     conn2.commit()
     conn2.close()
 
-    # 步驟 5：呼叫 spatialite_network
-    base_args = [
-        'spatialite_network',
-        '-d', db_path,
-        '-T', 'roads',
-        '-f', 'seq_from',
-        '-t', 'seq_to',
-        '-g', 'geometry',
-        '-n', 'name',
-        '--a-star-supported',
-        '--overwrite-output',
-    ]
-    modes = [
-        # (cost_col, data_tbl, vt_tbl, has_oneway)
-        ('cost_car',       'route_car_data',       'route_car',       True),
-        ('cost_car_avoid', 'route_car_avoid_data', 'route_car_avoid', True),
-        ('cost_moto',      'route_moto_data',      'route_moto',      True),
-        ('cost_walk',      'route_walk_data',      'route_walk',      False),
-    ]
-    for cost_col, data_tbl, vt_tbl, has_oneway in modes:
-        t = time.time()
-        print(f"  spatialite_network → {vt_tbl} ...", flush=True)
-        args = base_args + ['-c', cost_col, '-o', data_tbl, '-vt', vt_tbl]
-        if has_oneway:
-            args += ['--oneway-fromto', 'valid_ft', '--oneway-tofrom', 'valid_tf']
-        else:
-            args += ['--bidirectional']
-        result = subprocess.run(args, capture_output=True, text=True)
-        ok = 'NETWORK-DATA table' in result.stdout and 'successfully created' in result.stdout
-        print(f"    {'OK' if ok else 'FAILED'}，耗時 {time.time()-t:.1f}s")
-        if not ok:
-            print(result.stdout[-500:])
-            print(result.stderr[-500:])
+    # 步驟 5：呼叫 spatialite_network。
+    build_network_tables(db_path, ROUTE_MODES)
 
     return open_db(db_path)  # 重新打開
 
@@ -389,6 +405,7 @@ def main():
     parser = argparse.ArgumentParser(description='建立台灣路由 SQLite 資料庫')
     parser.add_argument('--roads',   action='store_true', help='只建 roads 表（跳過 VirtualNetwork）')
     parser.add_argument('--routing', action='store_true', help='只建 VirtualNetwork（roads 表須已存在）')
+    parser.add_argument('--demo-routing', action='store_true', help='只建展示用雙向 VirtualNetwork（roads 表須已存在）')
     parser.add_argument('--output',  default=DB_PATH,    help=f'輸出 DB 路徑（預設 {DB_PATH}）')
     parser.add_argument('--pbf', default=PBF_PATH, help=f'OSM PBF 路徑（預設 {PBF_PATH}）')
     parser.add_argument('--extension', default=EXT_PATH, help=f'SpatiaLite extension 路徑（預設 {EXT_PATH}）')
@@ -397,6 +414,14 @@ def main():
     DB_PATH = args.output
     PBF_PATH = args.pbf
     EXT_PATH = args.extension
+
+    if args.demo_routing:
+        if args.roads or args.routing:
+            parser.error('--demo-routing 不可與 --roads 或 --routing 合用')
+        if not os.path.exists(DB_PATH):
+            sys.exit(f"DB 不存在: {DB_PATH}，請先建立 roads 與正式路網")
+        build_demo_routing(DB_PATH)
+        return
 
     do_roads   = not args.routing
     do_routing = not args.roads

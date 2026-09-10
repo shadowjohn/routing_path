@@ -2,6 +2,13 @@
 
 本檔案記錄程式與架構的重要變更；部署路徑、私有服務 URL 與本機設定不放入版本控制。
 
+## 2026-09-10 — 展示用雙向道路路由
+
+- `direction_policy=legal|demo_bidirectional`：預設合法路由完全維持原狀；展示模式改用預建的雙向 VirtualNetwork。
+- 展示回應會標示 `is_demo_only`、`contains_reverse_edges`、`reversed_edge_count`，並在 `segments` 標示逆向展示路段。
+- 無法連通的路網明確回傳 `NO_PATH`，不回傳可被前端誤繪的直線。
+- 建庫腳本新增 `--demo-routing`，只新增展示圖而不重建既有合法路網。
+
 ## 2026-09-09 — 公開 MIT 初版
 
 - 建立 GitHub `main` 首版提交，延續 MIT License。

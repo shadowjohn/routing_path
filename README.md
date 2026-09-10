@@ -1,6 +1,6 @@
 # routing_path
 
-台灣 OSM + SpatiaLite 的 PHP 路線規劃範例。支援汽車、機車、步行、途徑點與可選的地址／POI 查詢。
+台灣 OSM + SpatiaLite 的 PHP 路線規劃範例。支援汽車、機車、步行、途徑點與可選的地址／POI 查詢；另有明確標示為展示用途的雙向道路模式。
 
 資料庫與部署設定都不納入版本控制；Easymap 7117 預設從 FocusIT CDN 載入，因此可安全公開這個 MIT 專案。
 
@@ -44,6 +44,7 @@ return [
 ```bash
 php -l api.php
 php test.php
+php tests/direction_policy.test.php
 node tests/geocode_ui.test.js
 curl 'http://127.0.0.1:8000/api.php?mode=routing_path&start_point=120.665689,24.119797&end_point=120.649321,24.180852&travel_mode=moto'
 ```

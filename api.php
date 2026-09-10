@@ -136,15 +136,21 @@ function routing_compact_steps($rows)
     $name = trim($row['name'] ?? '');
     if ($name === '') $name = '未命名道路';
     $cost = (float)($row['Cost'] ?? 0);
-    if (empty($steps) || $steps[count($steps) - 1]['name'] !== $name) {
+    $is_reverse = (bool)($row['is_reverse'] ?? false);
+    if (empty($steps) ||
+        $steps[count($steps) - 1]['name'] !== $name ||
+        $steps[count($steps) - 1]['is_reverse'] !== $is_reverse) {
       $steps[] = [
-        'name'     => $name,
-        'cost_sec' => $cost,
-        'count'    => 1,
+        'name'                => $name,
+        'cost_sec'            => $cost,
+        'count'               => 1,
+        'is_reverse'          => $is_reverse,
+        'reversed_edge_count' => $is_reverse ? 1 : 0,
       ];
     } else {
       $steps[count($steps) - 1]['cost_sec'] += $cost;
       $steps[count($steps) - 1]['count']++;
+      if ($is_reverse) $steps[count($steps) - 1]['reversed_edge_count']++;
     }
   }
 
@@ -153,6 +159,42 @@ function routing_compact_steps($rows)
     $steps[$i]['cost_min'] = round($step['cost_sec'] / 60, 1);
   }
   return $steps;
+}
+
+function routing_mark_reverse_edges(PDO $pdo, array &$rows, string $access_col, bool $is_demo): array
+{
+  $reverse_count = 0;
+  $statement = null;
+  if ($is_demo) {
+    $statement = $pdo->prepare("
+      SELECT EXISTS(
+        SELECT 1
+        FROM roads
+        WHERE {$access_col}=1
+          AND ((seq_from=? AND seq_to=? AND valid_ft=1)
+            OR (seq_from=? AND seq_to=? AND valid_tf=1))
+      )
+    ");
+  }
+
+  foreach ($rows as &$row) {
+    $is_link = $row['wkt'] === null && $row['Cost'] !== null;
+    $row['is_reverse'] = false;
+    if ($is_demo && $is_link) {
+      $statement->execute([
+        (int)$row['NodeFrom'], (int)$row['NodeTo'],
+        (int)$row['NodeTo'], (int)$row['NodeFrom'],
+      ]);
+      $row['is_reverse'] = !(bool)$statement->fetchColumn();
+      if ($row['is_reverse']) $reverse_count++;
+    }
+  }
+  unset($row);
+
+  return [
+    'contains_reverse_edges' => $reverse_count > 0,
+    'reversed_edge_count'    => $reverse_count,
+  ];
 }
 
 $mode = $_REQUEST['mode'] ?? '';
@@ -169,12 +211,25 @@ switch($mode)
       $travel_mode = in_array($_REQUEST['travel_mode'] ?? '', ['car','moto','walk'])
                      ? $_REQUEST['travel_mode'] : 'car';
       $avoid = (intval($_REQUEST['avoid_highway'] ?? 0) || intval($_REQUEST['avoid_toll'] ?? 0)) ? 1 : 0;
+      $direction_policy = trim((string)($_REQUEST['direction_policy'] ?? 'legal'));
+      if (!in_array($direction_policy, ['legal', 'demo_bidirectional'], true)) {
+        routing_json_error('direction_policy 僅支援 legal 或 demo_bidirectional');
+      }
+      $is_demo_only = $direction_policy === 'demo_bidirectional';
 
       $route_table_map = [
         'car'  => $avoid ? 'route_car_avoid' : 'route_car',
         'moto' => 'route_moto',
         'walk' => 'route_walk',
       ];
+      if ($is_demo_only) {
+        $route_table_map = [
+          'car'  => $avoid ? 'route_car_avoid_demo' : 'route_car_demo',
+          'moto' => 'route_moto_demo',
+          // route_walk 已是雙向圖，沿用避免重複建立大型資料表。
+          'walk' => 'route_walk',
+        ];
+      }
       $route_table = $route_table_map[$travel_mode];
       $access_col  = "access_{$travel_mode}";
 
@@ -240,7 +295,12 @@ switch($mode)
       }
 
       if (empty($mSQL)) routing_json_error('路由節點不足');
-      $ra = routing_select($thepdo, implode(" UNION ALL ", $mSQL), []);
+      try {
+        $ra = routing_select($thepdo, implode(" UNION ALL ", $mSQL), []);
+      } catch (Throwable $ex) {
+        routing_json_error($is_demo_only ? '展示雙向路網尚未建立' : '路由查詢失敗');
+      }
+      $reverse_summary = routing_mark_reverse_edges($thepdo, $ra, $access_col, $is_demo_only);
 
       $rb = [];
       $route_parts = [];
@@ -268,12 +328,19 @@ switch($mode)
       }
 
       ksort($route_parts);
+      if (count($route_parts) !== count($seq_nodes) - 1) {
+        routing_json_error('找不到可通行的路徑', ['status' => 'NO_PATH']);
+      }
       $route_parts = array_values($route_parts);
 
       echo json_encode([
         'status'          => 'OK',
         'travel_mode'     => $travel_mode,
         'avoid'           => (bool)$avoid,
+        'direction_policy' => $direction_policy,
+        'is_demo_only'     => $is_demo_only,
+        'contains_reverse_edges' => $reverse_summary['contains_reverse_edges'],
+        'reversed_edge_count' => $reverse_summary['reversed_edge_count'],
         'route_table'     => $route_table,
         'total_cost_sec'  => round($total_cost_s),
         'total_cost_min'  => round($total_cost_s / 60, 1),
@@ -282,6 +349,10 @@ switch($mode)
         'summary'         => [
           'travel_mode'     => $travel_mode,
           'avoid'           => (bool)$avoid,
+          'direction_policy' => $direction_policy,
+          'is_demo_only'     => $is_demo_only,
+          'contains_reverse_edges' => $reverse_summary['contains_reverse_edges'],
+          'reversed_edge_count' => $reverse_summary['reversed_edge_count'],
           'route_table'     => $route_table,
           'total_cost_sec'  => round($total_cost_s),
           'total_cost_min'  => round($total_cost_s / 60, 1),

@@ -10,7 +10,10 @@ Taiwan OSM PBF
             ├─ route_car
             ├─ route_car_avoid
             ├─ route_moto
-            └─ route_walk
+            ├─ route_walk
+            ├─ route_car_demo
+            ├─ route_car_avoid_demo
+            └─ route_moto_demo
 
 index.php ── api.php ── SpatiaLite
      └──── FocusIT Easymap 7117 CDN
@@ -44,6 +47,7 @@ python3 build_routing_v2.py \
 ```text
 --roads                 只建立 roads 表
 --routing               對既有 DB 建立 VirtualNetwork
+--demo-routing          對既有 DB 建立展示用雙向 VirtualNetwork
 --output FILE           路由 DB 輸出位置
 --pbf FILE              OSM PBF 來源
 --extension FILE        SpatiaLite extension
@@ -55,6 +59,7 @@ python3 build_routing_v2.py \
 - `node_seq`：把超出 int32 的 OSM node ID 重新映射為循序整數。
 - `idx_roads_geometry`：最近道路節點使用的 RTree 空間索引。
 - 四個 VirtualNetwork 路由表：汽車、避高速／收費汽車、機車、步行。
+- 三個展示用雙向圖：汽車、避高速／收費汽車、機車；步行圖原本已是雙向，所以共用 `route_walk`。
 
 `cost_car_avoid` 會將高速與收費路段成本乘上 999，以優先繞開，而不是讓路網斷裂。
 
@@ -101,6 +106,7 @@ Endpoint：`api.php?mode=routing_path`
 | `end_point` | 終點 WGS84 `lon,lat` | `120.649321,24.180852` |
 | `passpath` | 途徑點；每行一組 `lon,lat` | 選填 |
 | `travel_mode` | `car`、`moto`、`walk` | `moto` |
+| `direction_policy` | `legal`（預設，合法導航）或 `demo_bidirectional`（僅展示稽核，忽略單行方向） | `legal` |
 | `avoid_highway` | 1 為避開高速／快速道路 | `0` |
 | `avoid_toll` | 1 為避開收費路段 | `0` |
 
@@ -116,6 +122,9 @@ curl 'http://127.0.0.1:8000/api.php?mode=routing_path&start_point=120.665689,24.
 - `snap_points`：起點、終點與途徑點吸附到路網的位置及距離。
 - `route_parts`：可直接繪製的 WKT 路線。
 - `segments`：依連續道路名稱彙整的導航摘要。
+- `direction_policy`、`is_demo_only`、`contains_reverse_edges`、`reversed_edge_count`：方向模式與逆向展示的可追溯資訊。展示模式絕不可用於正式導航、施工或接管判定。
+
+圖路徑不存在時，回應為 `status: "NO_PATH"`，不會以直線補畫。
 
 ## 前端行為
 
@@ -130,6 +139,7 @@ curl 'http://127.0.0.1:8000/api.php?mode=routing_path&start_point=120.665689,24.
 ```bash
 php -l api.php
 php -l index.php
+php tests/direction_policy.test.php
 node tests/geocode_ui.test.js
 ```
 

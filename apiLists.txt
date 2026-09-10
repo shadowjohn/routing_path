@@ -1,8 +1,8 @@
 {
   "routing_path":
   {
-    "description": "路線規劃 API，支援汽車／機車／步行三模式，可選擇避開高速公路或收費路段。回傳完整路線 WKT geometry、預估時間、距離、吸附點與路段摘要。",
-    "result_sample": "{\n  \"status\": \"OK\",\n  \"travel_mode\": \"car\",\n  \"avoid\": false,\n  \"route_table\": \"route_car\",\n  \"total_cost_sec\": 626,\n  \"total_cost_min\": 10.4,\n  \"total_length_m\": 8299.9,\n  \"total_length_km\": 8.3,\n  \"summary\": {\n    \"travel_mode\": \"car\",\n    \"avoid\": false,\n    \"route_table\": \"route_car\",\n    \"total_cost_sec\": 626,\n    \"total_cost_min\": 10.4,\n    \"total_length_m\": 8299.9,\n    \"total_length_km\": 8.3\n  },\n  \"snap_points\": {\n    \"start\": { \"seq_id\": 782312, \"distance_m\": 42.9 },\n    \"via\": [],\n    \"end\": { \"seq_id\": 351540, \"distance_m\": 20.6 }\n  },\n  \"route_parts\": [\n    {\n      \"road_num\": 0,\n      \"cost_sec\": 625.8,\n      \"wkt\": \"LINESTRING(120.650252 24.177706,120.665801 24.120011)\"\n    }\n  ],\n  \"segments\": [\n    { \"name\": \"逢大路\", \"cost_min\": 0.4 },\n    { \"name\": \"忠明南路\", \"cost_min\": 5.3 }\n  ],\n  \"nodes\": [782312, 351540],\n  \"data\": { \"0\": [] }\n}",
+    "description": "路線規劃 API，支援汽車／機車／步行三模式，可選擇避開高速公路或收費路段。展示稽核可選用忽略單行方向的雙向圖；回傳會明確標示不可作合法導航。",
+    "result_sample": "{\n  \"status\": \"OK\",\n  \"travel_mode\": \"car\",\n  \"avoid\": false,\n  \"direction_policy\": \"legal\",\n  \"is_demo_only\": false,\n  \"contains_reverse_edges\": false,\n  \"reversed_edge_count\": 0,\n  \"route_table\": \"route_car\",\n  \"total_cost_sec\": 626,\n  \"total_cost_min\": 10.4,\n  \"total_length_m\": 8299.9,\n  \"total_length_km\": 8.3,\n  \"summary\": {\n    \"travel_mode\": \"car\",\n    \"avoid\": false,\n    \"direction_policy\": \"legal\",\n    \"is_demo_only\": false,\n    \"contains_reverse_edges\": false,\n    \"reversed_edge_count\": 0,\n    \"route_table\": \"route_car\",\n    \"total_cost_sec\": 626,\n    \"total_cost_min\": 10.4,\n    \"total_length_m\": 8299.9,\n    \"total_length_km\": 8.3\n  },\n  \"snap_points\": {\n    \"start\": { \"seq_id\": 782312, \"distance_m\": 42.9 },\n    \"via\": [],\n    \"end\": { \"seq_id\": 351540, \"distance_m\": 20.6 }\n  },\n  \"route_parts\": [\n    {\n      \"road_num\": 0,\n      \"cost_sec\": 625.8,\n      \"wkt\": \"LINESTRING(120.650252 24.177706,120.665801 24.120011)\"\n    }\n  ],\n  \"segments\": [\n    { \"name\": \"逢大路\", \"cost_min\": 0.4, \"is_reverse\": false, \"reversed_edge_count\": 0 },\n    { \"name\": \"忠明南路\", \"cost_min\": 5.3, \"is_reverse\": false, \"reversed_edge_count\": 0 }\n  ],\n  \"nodes\": [782312, 351540],\n  \"data\": { \"0\": [] }\n}",
     "GET": {
       "start_point": {
         "sample": "120.649834,24.177558",
@@ -15,6 +15,10 @@
       "travel_mode": {
         "sample": "car",
         "description": "交通模式：car（汽車）/ moto（機車）/ walk（步行），預設 car"
+      },
+      "direction_policy": {
+        "sample": "legal",
+        "description": "道路方向：legal（預設，合法導航）/ demo_bidirectional（僅展示稽核，可能逆向）"
       },
       "avoid_highway": {
         "sample": "0",
